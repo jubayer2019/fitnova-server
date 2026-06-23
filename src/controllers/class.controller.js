@@ -21,6 +21,7 @@ export const getClasses = async (req, res, next) => {
     const skip = (Number(page) - 1) * Number(limit);
 
     const classes = await Class.find(query)
+      .populate("trainerId", "name image specialty")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(Number(limit));
@@ -43,6 +44,7 @@ export const getClasses = async (req, res, next) => {
 export const getFeaturedClasses = async (req, res, next) => {
   try {
     const classes = await Class.find({ status: "approved" })
+      .populate("trainerId", "name image specialty")
       .sort({ bookingCount: -1 })
       .limit(6);
     res.status(200).json({ success: true, data: classes });
@@ -54,7 +56,7 @@ export const getFeaturedClasses = async (req, res, next) => {
 // GET /api/classes/:id
 export const getClassById = async (req, res, next) => {
   try {
-    const classData = await Class.findById(req.params.id);
+    const classData = await Class.findById(req.params.id).populate("trainerId", "name image specialty bio");
     if (!classData) {
       return res.status(404).json({ success: false, message: "Class not found" });
     }

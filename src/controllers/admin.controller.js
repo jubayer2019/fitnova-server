@@ -38,7 +38,13 @@ export const getUsers = async (req, res, next) => {
 // PATCH /api/admin/users/:id/block
 export const blockUser = async (req, res, next) => {
   try {
-    const user = await User.findByIdAndUpdate(req.params.id, { status: "blocked" }, { new: true });
+    const db = mongoose.connection.db;
+    const user = await db.collection("user").findOneAndUpdate(
+      { _id: req.params.id },
+      { $set: { status: "blocked" } },
+      { returnDocument: "after" }
+    );
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
     res.status(200).json({ success: true, message: "User blocked", data: user });
   } catch (error) {
     next(error);
@@ -48,7 +54,13 @@ export const blockUser = async (req, res, next) => {
 // PATCH /api/admin/users/:id/unblock
 export const unblockUser = async (req, res, next) => {
   try {
-    const user = await User.findByIdAndUpdate(req.params.id, { status: "active" }, { new: true });
+    const db = mongoose.connection.db;
+    const user = await db.collection("user").findOneAndUpdate(
+      { _id: req.params.id },
+      { $set: { status: "active" } },
+      { returnDocument: "after" }
+    );
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
     res.status(200).json({ success: true, message: "User unblocked", data: user });
   } catch (error) {
     next(error);
@@ -62,10 +74,12 @@ export const updateRole = async (req, res, next) => {
     if (!["admin", "trainer", "user"].includes(role)) {
       return res.status(400).json({ success: false, message: "Invalid role provided" });
     }
-    let user = await User.findByIdAndUpdate(req.params.id, { role }, { new: true });
-    if (!user && mongoose.Types.ObjectId.isValid(req.params.id)) {
-      user = await User.findOneAndUpdate({ _id: new mongoose.Types.ObjectId(req.params.id) }, { role }, { new: true });
-    }
+    const db = mongoose.connection.db;
+    const user = await db.collection("user").findOneAndUpdate(
+      { _id: req.params.id },
+      { $set: { role } },
+      { returnDocument: "after" }
+    );
     if (!user) return res.status(404).json({ success: false, message: "User not found" });
     res.status(200).json({ success: true, message: `User role updated to ${role}`, data: user });
   } catch (error) {
