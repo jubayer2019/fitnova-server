@@ -54,11 +54,15 @@ export const unblockUser = async (req, res, next) => {
   }
 };
 
-// PATCH /api/admin/users/:id/make-admin
-export const makeAdmin = async (req, res, next) => {
+// PATCH /api/admin/users/:id/role
+export const updateRole = async (req, res, next) => {
   try {
-    const user = await User.findByIdAndUpdate(req.params.id, { role: "admin" }, { new: true });
-    res.status(200).json({ success: true, message: "User promoted to admin", data: user });
+    const { role } = req.body;
+    if (!["admin", "trainer", "user"].includes(role)) {
+      return res.status(400).json({ success: false, message: "Invalid role provided" });
+    }
+    const user = await User.findByIdAndUpdate(req.params.id, { role }, { new: true });
+    res.status(200).json({ success: true, message: `User role updated to ${role}`, data: user });
   } catch (error) {
     next(error);
   }

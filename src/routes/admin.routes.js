@@ -1,6 +1,6 @@
 import express from "express";
 import { 
-  getOverview, getUsers, blockUser, unblockUser, makeAdmin,
+  getOverview, getUsers, blockUser, unblockUser, updateRole,
   getTrainers, demoteTrainer,
   getClasses, approveClass, rejectClass, deleteClass,
   getTransactions, getForumPosts, deleteForumPost,
@@ -17,7 +17,7 @@ router.get("/overview", getOverview);
 router.get("/users", getUsers);
 router.patch("/users/:id/block", blockUser);
 router.patch("/users/:id/unblock", unblockUser);
-router.patch("/users/:id/make-admin", makeAdmin);
+router.patch("/users/:id/role", updateRole);
 
 router.get("/trainers", getTrainers);
 router.patch("/trainers/:id/demote", demoteTrainer);
