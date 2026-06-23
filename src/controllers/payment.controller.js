@@ -5,8 +5,8 @@ import { Transaction } from "../models/Transaction.js";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_dummy_key_for_build");
 
-// POST /api/payments/create-payment-intent
-export const createPaymentIntent = async (req, res, next) => {
+// POST /api/payments/create-checkout-session
+export const createCheckoutSession = async (req, res, next) => {
   try {
     const { classId } = req.body;
 
@@ -20,100 +20,101 @@ export const createPaymentIntent = async (req, res, next) => {
       return res.status(409).json({ success: false, message: "You have already booked this class" });
     }
 
-    // Create a PaymentIntent with the order amount and currency
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(classData.price * 100), // convert to cents
-      currency: "usd",
+    const clientUrl = process.env.CLIENT_URL || "http://localhost:3000";
+
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      mode: "payment",
+      success_url: `${clientUrl}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${clientUrl}/payment/${classId}`,
+      customer_email: req.user.email,
+      client_reference_id: req.user._id.toString(),
       metadata: {
         userId: req.user._id.toString(),
         classId: classId.toString(),
       },
+      line_items: [
+        {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: classData.title || classData.className || "Class Booking",
+              images: classData.image ? [classData.image] : [],
+            },
+            unit_amount: Math.round(classData.price * 100),
+          },
+          quantity: 1,
+        },
+      ],
     });
 
     res.status(200).json({
       success: true,
-      clientSecret: paymentIntent.client_secret,
+      url: session.url,
     });
   } catch (error) {
     next(error);
   }
 };
 
-// POST /api/payments/confirm-booking
-export const confirmBooking = async (req, res, next) => {
+// GET /api/payments/session/:sessionId
+export const verifySession = async (req, res, next) => {
   try {
-    const { paymentIntentId, classId } = req.body;
+    const { sessionId } = req.params;
 
-    if (!paymentIntentId || !classId) {
-      return res.status(400).json({ success: false, message: "paymentIntentId and classId are required" });
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    if (!session || session.payment_status !== "paid") {
+      return res.status(400).json({ success: false, message: "Payment not completed" });
     }
+
+    const classId = session.metadata.classId;
+    const userId = session.metadata.userId;
 
     const classData = await Class.findById(classId);
     if (!classData) {
       return res.status(404).json({ success: false, message: "Class not found" });
     }
 
-    const existingBooking = await Booking.findOne({ userId: req.user._id, classId });
-    if (existingBooking) {
-      return res.status(409).json({ success: false, message: "You have already booked this class" });
+    let booking = await Booking.findOne({ userId, classId });
+    let transaction = await Transaction.findOne({ paymentIntentId: session.payment_intent });
+
+    if (!transaction) {
+      transaction = await Transaction.create({
+        userId,
+        userEmail: session.customer_details?.email || "",
+        classId,
+        className: classData.title || classData.className,
+        amount: session.amount_total / 100,
+        currency: session.currency,
+        transactionId: session.payment_intent,
+        paymentIntentId: session.payment_intent,
+        status: "succeeded"
+      });
     }
 
-    const existingTransaction = await Transaction.findOne({ paymentIntentId });
-    if (existingTransaction) {
-      return res.status(409).json({ success: false, message: "Transaction already processed" });
+    if (!booking) {
+      // Find user details to save properly
+      // If we don't have it, we use info from classData and session
+      booking = await Booking.create({
+        userId,
+        userEmail: session.customer_details?.email || "",
+        userName: session.customer_details?.name || "User",
+        classId,
+        className: classData.title || classData.className,
+        trainerId: classData.trainerId,
+        trainerName: classData.trainerName,
+        schedule: classData.schedule,
+        price: classData.price,
+        paymentStatus: "paid",
+        transactionId: session.payment_intent
+      });
+
+      classData.bookingCount += 1;
+      await classData.save();
     }
 
-    // Verify Payment Intent via Stripe API
-    // Actually, in production, Stripe Webhooks are more reliable.
-    // For this project, we'll verify it manually here too.
-    let paymentIntent;
-    try {
-      paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-    } catch (err) {
-      return res.status(400).json({ success: false, message: "Invalid payment intent" });
-    }
-
-    if (paymentIntent.status !== "succeeded") {
-      return res.status(400).json({ success: false, message: "Payment not successful" });
-    }
-
-    // Save transaction
-    const transaction = await Transaction.create({
-      userId: req.user._id,
-      userEmail: req.user.email,
-      classId,
-      className: classData.className,
-      amount: paymentIntent.amount / 100,
-      currency: paymentIntent.currency,
-      transactionId: paymentIntent.id,
-      paymentIntentId: paymentIntent.id,
-      status: "succeeded"
-    });
-
-    // Save booking
-    const booking = await Booking.create({
-      userId: req.user._id,
-      userEmail: req.user.email,
-      userName: req.user.name,
-      classId,
-      className: classData.className,
-      trainerId: classData.trainerId,
-      trainerName: classData.trainerName,
-      schedule: classData.schedule,
-      price: classData.price,
-      paymentStatus: "paid",
-      transactionId: paymentIntent.id
-    });
-
-    // Increment class booking count
-    classData.bookingCount += 1;
-    await classData.save();
-
-    res.status(200).json({ success: true, message: "Booking confirmed", data: booking });
+    res.status(200).json({ success: true, message: "Payment verified", booking });
   } catch (error) {
-    if (error.code === 11000) {
-      return res.status(409).json({ success: false, message: "Duplicate processing" });
-    }
     next(error);
   }
 };
