@@ -81,13 +81,13 @@ export const verifySession = async (req, res, next) => {
     if (!transaction) {
       transaction = await Transaction.create({
         userId,
-        userEmail: session.customer_details?.email || "",
+        userEmail: req.user?.email || session.customer_details?.email || "unknown@example.com",
         classId,
         className: classData.title || classData.className,
         amount: session.amount_total / 100,
         currency: session.currency,
-        transactionId: session.payment_intent,
-        paymentIntentId: session.payment_intent,
+        transactionId: session.payment_intent || session.id,
+        paymentIntentId: session.payment_intent || session.id,
         status: "succeeded"
       });
     }
@@ -97,8 +97,8 @@ export const verifySession = async (req, res, next) => {
       // If we don't have it, we use info from classData and session
       booking = await Booking.create({
         userId,
-        userEmail: session.customer_details?.email || "",
-        userName: session.customer_details?.name || "User",
+        userEmail: req.user?.email || session.customer_details?.email || "unknown@example.com",
+        userName: req.user?.name || session.customer_details?.name || "User",
         classId,
         className: classData.title || classData.className,
         trainerId: classData.trainerId,
@@ -106,10 +106,10 @@ export const verifySession = async (req, res, next) => {
         schedule: classData.schedule,
         price: classData.price,
         paymentStatus: "paid",
-        transactionId: session.payment_intent
+        transactionId: session.payment_intent || session.id
       });
 
-      classData.bookingCount += 1;
+      classData.bookingCount = (classData.bookingCount || 0) + 1;
       await classData.save();
     }
 
