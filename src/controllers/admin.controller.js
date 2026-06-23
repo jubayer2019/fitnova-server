@@ -162,7 +162,10 @@ export const deleteClass = async (req, res, next) => {
 // GET /api/admin/transactions
 export const getTransactions = async (req, res, next) => {
   try {
-    const transactions = await Transaction.find().sort({ createdAt: -1 });
+    const transactions = await Transaction.find()
+      .populate("userId", "name email image")
+      .populate("classId", "title className price")
+      .sort({ createdAt: -1 });
     res.status(200).json({ success: true, data: transactions });
   } catch (error) {
     next(error);
@@ -172,7 +175,9 @@ export const getTransactions = async (req, res, next) => {
 // GET /api/admin/forum-posts
 export const getForumPosts = async (req, res, next) => {
   try {
-    const posts = await ForumPost.find().sort({ createdAt: -1 });
+    const posts = await ForumPost.find()
+      .populate("authorId", "name image")
+      .sort({ createdAt: -1 });
     res.status(200).json({ success: true, data: posts });
   } catch (error) {
     next(error);
