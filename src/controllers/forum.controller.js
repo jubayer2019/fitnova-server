@@ -62,6 +62,7 @@ export const createPost = async (req, res, next) => {
       authorId: req.user._id,
       authorName: req.user.name,
       authorEmail: req.user.email,
+      authorImage: req.user.image,
       authorRole: req.user.role,
     });
 
@@ -117,7 +118,7 @@ export const toggleLike = async (req, res, next) => {
     const post = await ForumPost.findById(req.params.id);
     if (!post) return res.status(404).json({ success: false, message: "Post not found" });
 
-    const userId = req.user._id;
+    const userId = req.user._id.toString();
 
     // If previously disliked, remove dislike
     if (post.dislikedBy.includes(userId)) {
@@ -147,7 +148,7 @@ export const toggleDislike = async (req, res, next) => {
     const post = await ForumPost.findById(req.params.id);
     if (!post) return res.status(404).json({ success: false, message: "Post not found" });
 
-    const userId = req.user._id;
+    const userId = req.user._id.toString();
 
     // If previously liked, remove like
     if (post.likedBy.includes(userId)) {

@@ -8,6 +8,7 @@ const forumPostSchema = new mongoose.Schema({
   authorId: { type: String, ref: "User", required: true },
   authorName: { type: String, required: true },
   authorEmail: { type: String, required: true },
+  authorImage: { type: String },
   authorRole: { type: String, required: true },
   likes: { type: Number, default: 0 },
   dislikes: { type: Number, default: 0 },

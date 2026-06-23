@@ -11,7 +11,7 @@ const router = express.Router();
 router.get("/posts", getPosts);
 router.get("/posts/latest", getLatestPosts);
 router.get("/posts/:id", getPostById);
-router.post("/posts", verifyUser, verifyTrainerOrAdmin, checkBlockedStatus, createPost);
+router.post("/posts", verifyUser, checkBlockedStatus, createPost);
 router.patch("/posts/:id", verifyUser, checkBlockedStatus, updatePost); // handled ownership in controller
 router.delete("/posts/:id", verifyUser, checkBlockedStatus, deletePost);
 

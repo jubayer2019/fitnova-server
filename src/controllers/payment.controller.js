@@ -109,13 +109,13 @@ export const verifySession = async (req, res, next) => {
         transactionId: session.payment_intent || session.id
       });
 
-      classData.bookingCount = (classData.bookingCount || 0) + 1;
-      await classData.save();
+      // Safely increment bookingCount without triggering full document validation
+      await Class.updateOne({ _id: classId }, { $inc: { bookingCount: 1 } });
     }
 
     res.status(200).json({ success: true, message: "Payment verified", booking });
   } catch (error) {
-    next(error);
+    res.status(500).json({ success: false, message: error.message || "Verification failed" });
   }
 };
 
