@@ -84,7 +84,7 @@ app.get("/", (req, res) => {
 });
 
 // API Routes
-app.all("/api/auth/*", toNodeHandler(auth));
+app.use("/api/auth", toNodeHandler(auth));
 app.use("/api/users", userRoutes);
 app.use("/api/classes", classRoutes);
 app.use("/api/bookings", bookingRoutes);
