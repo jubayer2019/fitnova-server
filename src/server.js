@@ -100,6 +100,17 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/trainer", trainerRoutes);
 
+// Temporary fix for jwks
+app.get("/api/fix-jwks", async (req, res) => {
+  try {
+    const mongoose = (await import("mongoose")).default;
+    await mongoose.connection.db.dropCollection("jwks");
+    res.json({ success: true, message: "Dropped jwks collection successfully! BetterAuth will regenerate it. You can now reload your site." });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Unknown routes
 app.use((req, res, next) => {
   res.status(404).json({
