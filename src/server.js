@@ -35,10 +35,15 @@ app.set("trust proxy", 1);
 // Security Middlewares
 app.use(helmet());
 app.use(cors({
-  origin: process.env.CLIENT_URL || "http://localhost:3000",
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    // Allow all origins to support Vercel preview URLs and custom domains
+    return callback(null, true);
+  },
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+  allowedHeaders: ["Content-Type", "Authorization", "x-csrf-token", "x-requested-with", "Accept", "Accept-Version", "Content-Length", "Content-MD5", "Date", "X-Api-Version"]
 }));
 
 // Rate limiting (general)
