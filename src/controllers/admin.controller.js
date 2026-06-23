@@ -39,13 +39,18 @@ export const getUsers = async (req, res, next) => {
 export const blockUser = async (req, res, next) => {
   try {
     const db = mongoose.connection.db;
-    const user = await db.collection("user").findOneAndUpdate(
-      { _id: req.params.id },
-      { $set: { status: "blocked" } },
-      { returnDocument: "after" }
-    );
-    if (!user) return res.status(404).json({ success: false, message: "User not found" });
-    res.status(200).json({ success: true, message: "User blocked", data: user });
+    const update = { $set: { status: "blocked" } };
+    
+    // Try string ID first (BetterAuth native format)
+    let result = await db.collection("user").findOneAndUpdate({ _id: req.params.id }, update, { returnDocument: "after" });
+    
+    // If not found and it's a valid hex string, try ObjectId (Legacy data)
+    if (!result && mongoose.Types.ObjectId.isValid(req.params.id)) {
+      result = await db.collection("user").findOneAndUpdate({ _id: new mongoose.Types.ObjectId(req.params.id) }, update, { returnDocument: "after" });
+    }
+    
+    if (!result) return res.status(404).json({ success: false, message: "User not found" });
+    res.status(200).json({ success: true, message: "User blocked", data: result });
   } catch (error) {
     next(error);
   }
@@ -55,13 +60,16 @@ export const blockUser = async (req, res, next) => {
 export const unblockUser = async (req, res, next) => {
   try {
     const db = mongoose.connection.db;
-    const user = await db.collection("user").findOneAndUpdate(
-      { _id: req.params.id },
-      { $set: { status: "active" } },
-      { returnDocument: "after" }
-    );
-    if (!user) return res.status(404).json({ success: false, message: "User not found" });
-    res.status(200).json({ success: true, message: "User unblocked", data: user });
+    const update = { $set: { status: "active" } };
+    
+    let result = await db.collection("user").findOneAndUpdate({ _id: req.params.id }, update, { returnDocument: "after" });
+    
+    if (!result && mongoose.Types.ObjectId.isValid(req.params.id)) {
+      result = await db.collection("user").findOneAndUpdate({ _id: new mongoose.Types.ObjectId(req.params.id) }, update, { returnDocument: "after" });
+    }
+    
+    if (!result) return res.status(404).json({ success: false, message: "User not found" });
+    res.status(200).json({ success: true, message: "User unblocked", data: result });
   } catch (error) {
     next(error);
   }
@@ -74,14 +82,18 @@ export const updateRole = async (req, res, next) => {
     if (!["admin", "trainer", "user"].includes(role)) {
       return res.status(400).json({ success: false, message: "Invalid role provided" });
     }
+    
     const db = mongoose.connection.db;
-    const user = await db.collection("user").findOneAndUpdate(
-      { _id: req.params.id },
-      { $set: { role } },
-      { returnDocument: "after" }
-    );
-    if (!user) return res.status(404).json({ success: false, message: "User not found" });
-    res.status(200).json({ success: true, message: `User role updated to ${role}`, data: user });
+    const update = { $set: { role } };
+    
+    let result = await db.collection("user").findOneAndUpdate({ _id: req.params.id }, update, { returnDocument: "after" });
+    
+    if (!result && mongoose.Types.ObjectId.isValid(req.params.id)) {
+      result = await db.collection("user").findOneAndUpdate({ _id: new mongoose.Types.ObjectId(req.params.id) }, update, { returnDocument: "after" });
+    }
+    
+    if (!result) return res.status(404).json({ success: false, message: "User not found" });
+    res.status(200).json({ success: true, message: `User role updated to ${role}`, data: result });
   } catch (error) {
     next(error);
   }
