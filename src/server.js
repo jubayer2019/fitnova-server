@@ -88,7 +88,7 @@ app.use("/api/classes", classRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/favorites", favoriteRoutes);
 app.use("/api/trainer-applications", trainerApplicationRoutes);
-app.use("/api/forum", forumRoutes);
+app.use("/api", forumRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/trainer", trainerRoutes);
