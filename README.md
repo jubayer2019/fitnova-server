@@ -1,67 +1,80 @@
-# FitNova Backend API
+# FitNova - The Premium Fitness Operating System 🏋️‍♂️
 
-This is the Node.js/Express backend server for the FitNova fitness and gym management platform. It serves the Next.js frontend with robust authentication, role-based access control, Stripe payment integration, and complete class/forum management.
+FitNova is a comprehensive, modern operating system designed for fitness studios, personal trainers, and the members who power them. It provides a seamless experience for booking classes, engaging with the community, and managing studio operations through dedicated dashboards.
 
-## Features
+## 🔗 Live URLs
 
-- **Authentication**: JWT-based session management with HTTPOnly secure cookies. Compatible with Next.js frontend Better Auth flow.
-- **Roles & Permissions**: Fine-grained access control for Users, Trainers, and Admins.
-- **Security**: Built-in protection with Helmet, Express Rate Limit, and CORS configured for cross-origin credentials.
-- **Payments**: Stripe API integration with PaymentIntents and Webhook handling for reliable booking creation.
-- **Database**: MongoDB via Mongoose with optimized serverless connection caching.
-- **Features**: Searchable Classes, Bookings, Favorites, Trainer Applications, Forum Posts, Comments, and Dashboards.
+- **Client App (Vercel)**: [Live Demo Link] *(Replace with your Vercel URL)*
+- **Backend API**: [Live API Link] *(Replace with your API URL)*
 
-## Environment Variables
+## 🎯 Purpose
 
-Copy `.env.example` to `.env` and fill in the values:
+The primary purpose of FitNova is to bridge the gap between fitness enthusiasts and trainers by providing an all-in-one platform. 
+- **For Members**: Discover and book fitness classes effortlessly, track bookings, and interact with others in the community forum.
+- **For Trainers**: Create and manage classes, review rosters, and share fitness tips on the community forum.
+- **For Admins**: Network-wide controls to moderate users, approve or reject trainer applications and classes, and view platform analytics.
 
-```
-NODE_ENV=development
-PORT=5000
-CLIENT_URL=http://localhost:3000
-SERVER_URL=http://localhost:5000
-MONGODB_URI=mongodb://localhost:27017/fitnova
-JWT_SECRET=super_secret_jwt_key
-STRIPE_SECRET_KEY=your_stripe_secret
-STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
-COOKIE_NAME=fitnova_token
-```
+## ✨ Key Features
 
-## Local Setup
+- **Role-Based Dashboards**: Tailored experiences for Users, Trainers, and Admins.
+- **Class Booking System**: Users can browse classes, filter by category/price, and seamlessly book them.
+- **Community Forum**: A social space for users and trainers to share posts, react (like/dislike), and comment.
+- **Trainer Applications**: Users can apply to become trainers, subject to admin approval.
+- **Stripe Payment Integration**: Secure transaction processing for class bookings.
+- **Dynamic Analytics**: Real-time charts for revenue, member growth, and category shares in the admin dashboard.
+- **Secure Authentication**: Modern and secure user authentication powered by Better Auth.
 
-1. Install dependencies:
+## 🛠️ Technology Stack & Packages
+
+### Frontend (Client)
+Built with **Next.js 16** (App Router) and **React 19**, featuring a highly responsive and animated UI.
+- **UI & Styling**: TailwindCSS v4, Framer Motion, Radix UI (accessible headless components), Lucide React (icons)
+- **State & Data Fetching**: @tanstack/react-query, Axios
+- **Authentication**: Better Auth Client
+- **Data Visualization**: Recharts
+- **Forms & Validation**: React Hook Form, Zod
+- **Notifications**: React Hot Toast, Sonner
+
+### Backend (Server)
+Built with **Node.js** and **Express.js**, adhering to RESTful API principles.
+- **Framework**: Express.js
+- **Database & ORM**: MongoDB, Mongoose
+- **Authentication & Security**: Better Auth (with Mongo Adapter), JSONWebToken (JWT), Bcrypt, Helmet, CORS, Express Rate Limit
+- **Payments**: Stripe Node.js Library
+- **Logging & Utilities**: Morgan, Compression, Cookie Parser, Zod
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js (v18 or higher)
+- MongoDB Connection String
+- Stripe API Keys
+
+### Running Locally
+
+1. **Clone the repository**
    ```bash
+   git clone https://github.com/your-username/fitnova.git
+   ```
+
+2. **Setup the Server**
+   ```bash
+   cd server
    npm install
-   ```
-
-2. Seed the database (optional):
-   ```bash
-   npm run seed
-   ```
-
-3. Start development server:
-   ```bash
+   # Create a .env file and add necessary credentials (DB_URI, JWT_SECRET, STRIPE_KEY, etc.)
    npm run dev
    ```
 
-The server will be running at `http://localhost:5000`. 
-Check `http://localhost:5000/api/health` to confirm.
+3. **Setup the Client**
+   ```bash
+   cd ../client
+   npm install
+   # Create a .env.local file and set NEXT_PUBLIC_API_URL
+   npm run dev
+   ```
 
-## API Overview
+4. **Open in Browser**
+   Visit `http://localhost:3000` to see the app in action!
 
-- **Auth**: `/api/auth/register`, `/api/auth/login`, `/api/auth/logout`, `/api/auth/session`
-- **Users**: `/api/users/me`, `/api/users/dashboard-stats`
-- **Classes**: `/api/classes` (GET, POST), `/api/classes/:id` (GET, PATCH, DELETE)
-- **Bookings**: `/api/bookings` (POST, GET)
-- **Favorites**: `/api/favorites` (POST, GET, DELETE)
-- **Trainer Applications**: `/api/trainer-applications` (POST, GET)
-- **Forum**: `/api/forum/posts` (GET, POST, PATCH, DELETE), `/api/forum/posts/:id/like`
-- **Payments**: `/api/payments/create-payment-intent`, `/api/payments/confirm-booking`
-- **Admin**: `/api/admin/overview`, `/api/admin/users`, `/api/admin/classes`
-- **Trainer**: `/api/trainer/overview`, `/api/trainer/my-classes`
-
-## Deployment Notes (Vercel)
-
-This project is fully configured for deployment on Vercel using serverless functions.
-The `vercel.json` maps all routes to `src/server.js`.
-MongoDB connections are cached to prevent multiple instances from exhausting connection pools. Ensure all environment variables are properly set in the Vercel dashboard.
+---
+*Built with ❤️ for modern fitness communities.*
