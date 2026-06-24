@@ -210,10 +210,15 @@ export const approveTrainerApplication = async (req, res, next) => {
     const app = await TrainerApplication.findByIdAndUpdate(req.params.id, { status: "approved" }, { new: true });
     if (!app) return res.status(404).json({ success: false, message: "Application not found" });
 
-    let user = await User.findByIdAndUpdate(app.userId, { role: "trainer", trainerApplicationStatus: "approved" });
-    if (!user && mongoose.Types.ObjectId.isValid(app.userId)) {
-      user = await User.findOneAndUpdate({ _id: new mongoose.Types.ObjectId(app.userId) }, { role: "trainer", trainerApplicationStatus: "approved" });
+    const db = mongoose.connection.db;
+    const update = { $set: { role: "trainer", trainerApplicationStatus: "approved" } };
+    
+    let result = await db.collection("user").findOneAndUpdate({ _id: app.userId }, update, { returnDocument: "after" });
+    
+    if (!result && mongoose.Types.ObjectId.isValid(app.userId)) {
+      result = await db.collection("user").findOneAndUpdate({ _id: new mongoose.Types.ObjectId(app.userId) }, update, { returnDocument: "after" });
     }
+    
     res.status(200).json({ success: true, message: "Trainer application approved" });
   } catch (error) {
     next(error);
@@ -227,10 +232,15 @@ export const rejectTrainerApplication = async (req, res, next) => {
     const app = await TrainerApplication.findByIdAndUpdate(req.params.id, { status: "rejected", feedback }, { new: true });
     if (!app) return res.status(404).json({ success: false, message: "Application not found" });
 
-    let user = await User.findByIdAndUpdate(app.userId, { trainerApplicationStatus: "rejected", trainerFeedback: feedback });
-    if (!user && mongoose.Types.ObjectId.isValid(app.userId)) {
-      user = await User.findOneAndUpdate({ _id: new mongoose.Types.ObjectId(app.userId) }, { trainerApplicationStatus: "rejected", trainerFeedback: feedback });
+    const db = mongoose.connection.db;
+    const update = { $set: { trainerApplicationStatus: "rejected", trainerFeedback: feedback } };
+    
+    let result = await db.collection("user").findOneAndUpdate({ _id: app.userId }, update, { returnDocument: "after" });
+    
+    if (!result && mongoose.Types.ObjectId.isValid(app.userId)) {
+      result = await db.collection("user").findOneAndUpdate({ _id: new mongoose.Types.ObjectId(app.userId) }, update, { returnDocument: "after" });
     }
+    
     res.status(200).json({ success: true, message: "Trainer application rejected" });
   } catch (error) {
     next(error);
