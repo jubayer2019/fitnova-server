@@ -32,7 +32,9 @@ export const getOverview = async (req, res, next) => {
 // GET /api/trainer/my-classes
 export const getMyClasses = async (req, res, next) => {
   try {
-    const classes = await Class.find({ trainerId: req.user._id }).sort({ createdAt: -1 });
+    const classes = await Class.find({ trainerId: req.user._id })
+      .populate("trainerId", "name image specialty")
+      .sort({ createdAt: -1 });
     res.status(200).json({ success: true, data: classes });
   } catch (error) {
     next(error);

@@ -122,7 +122,9 @@ export const demoteTrainer = async (req, res, next) => {
 // GET /api/admin/classes
 export const getClasses = async (req, res, next) => {
   try {
-    const classes = await Class.find().sort({ createdAt: -1 });
+    const classes = await Class.find()
+      .populate("trainerId", "name image")
+      .sort({ createdAt: -1 });
     res.status(200).json({ success: true, data: classes });
   } catch (error) {
     next(error);
