@@ -4,7 +4,7 @@ import { User } from "../models/User.js";
 // POST /api/trainer-applications
 export const applyForTrainer = async (req, res, next) => {
   try {
-    const { experience, specialty } = req.body;
+    const { experience, specialty, bio } = req.body;
 
     if (!experience || !specialty) {
       return res.status(400).json({ success: false, message: "Experience and specialty are required" });
@@ -25,6 +25,7 @@ export const applyForTrainer = async (req, res, next) => {
       email: req.user.email,
       experience,
       specialty,
+      bio,
       status: "pending"
     });
 

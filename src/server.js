@@ -118,7 +118,7 @@ app.get("/api/fix-initial-classes", async (req, res) => {
     const db = mongoose.connection.db;
     
     // Find admin
-    const admin = await db.collection('users').findOne({ role: 'admin' });
+    const admin = await db.collection('user').findOne({ role: 'admin' });
     if (!admin) return res.status(404).json({ success: false, message: "No admin found" });
 
     // Update classes

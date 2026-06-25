@@ -6,6 +6,7 @@ const trainerApplicationSchema = new mongoose.Schema({
   email: { type: String, required: true },
   experience: { type: Number, required: true }, // in years
   specialty: { type: String, required: true },
+  bio: { type: String },
   status: { type: String, enum: ["pending", "approved", "rejected"], default: "pending" },
   feedback: { type: String },
 }, { timestamps: true });

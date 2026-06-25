@@ -16,6 +16,9 @@ export const getMyProfile = async (req, res, next) => {
 export const updateMyProfile = async (req, res, next) => {
   try {
     const allowedUpdates = ["name", "image"];
+    if (req.user.role === "trainer") {
+      allowedUpdates.push("specialty", "bio", "experience");
+    }
     const updates = {};
     for (const key of allowedUpdates) {
       if (req.body[key] !== undefined) {

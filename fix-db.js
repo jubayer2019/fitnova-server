@@ -10,7 +10,7 @@ async function run() {
     const db = mongoose.connection.db;
     
     // 1. Get the admin user
-    const admin = await db.collection('users').findOne({ role: 'admin' });
+    const admin = await db.collection('user').findOne({ role: 'admin' });
     if (!admin) throw new Error('No admin found');
     console.log('Found admin:', admin.name, admin._id);
 

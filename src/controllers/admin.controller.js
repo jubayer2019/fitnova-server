@@ -213,7 +213,15 @@ export const approveTrainerApplication = async (req, res, next) => {
     if (!app) return res.status(404).json({ success: false, message: "Application not found" });
 
     const db = mongoose.connection.db;
-    const update = { $set: { role: "trainer", trainerApplicationStatus: "approved" } };
+    const update = { 
+      $set: { 
+        role: "trainer", 
+        trainerApplicationStatus: "approved",
+        specialty: app.specialty,
+        bio: app.bio || "",
+        experience: app.experience?.toString() || ""
+      } 
+    };
     
     let result = await db.collection("user").findOneAndUpdate({ _id: app.userId }, update, { returnDocument: "after" });
     
