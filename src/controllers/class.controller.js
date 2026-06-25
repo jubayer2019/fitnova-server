@@ -1,5 +1,34 @@
+import mongoose from "mongoose";
 import { Class } from "../models/Class.js";
 import { Booking } from "../models/Booking.js";
+import { User } from "../models/User.js";
+
+const getPopulatedTrainer = async (cls) => {
+  let trainer = cls.trainerId;
+  if (!trainer || typeof trainer === 'string') {
+    let trainerIdStr = typeof trainer === 'string' ? trainer : cls.trainerId;
+    let user = null;
+    if (trainerIdStr) {
+      user = await User.findById(trainerIdStr);
+      if (!user && mongoose.Types.ObjectId.isValid(trainerIdStr)) {
+        user = await User.findOne({ _id: new mongoose.Types.ObjectId(trainerIdStr) });
+      }
+    }
+    if (!user && cls.trainerName) {
+      user = await User.findOne({ name: cls.trainerName });
+    }
+    if (user) {
+      trainer = {
+        _id: user._id.toString(),
+        name: user.name,
+        image: user.image,
+        specialty: user.specialty || "Fitness Trainer",
+        bio: user.bio || "Passionate about helping you achieve your fitness goals."
+      };
+    }
+  }
+  return trainer || { name: cls.trainerName };
+};
 
 // GET /api/classes
 export const getClasses = async (req, res, next) => {
@@ -20,11 +49,17 @@ export const getClasses = async (req, res, next) => {
 
     const skip = (Number(page) - 1) * Number(limit);
 
-    const classes = await Class.find(query)
+    const rawClasses = await Class.find(query)
       .populate("trainerId", "name image specialty")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(Number(limit));
+
+    const classes = await Promise.all(rawClasses.map(async (cls) => {
+      const clsObj = cls.toObject();
+      clsObj.trainerId = await getPopulatedTrainer(cls);
+      return clsObj;
+    }));
 
     const total = await Class.countDocuments(query);
 
@@ -43,10 +78,17 @@ export const getClasses = async (req, res, next) => {
 // GET /api/classes/featured
 export const getFeaturedClasses = async (req, res, next) => {
   try {
-    const classes = await Class.find({ status: "approved" })
+    const rawClasses = await Class.find({ status: "approved" })
       .populate("trainerId", "name image specialty")
       .sort({ bookingCount: -1 })
       .limit(6);
+
+    const classes = await Promise.all(rawClasses.map(async (cls) => {
+      const clsObj = cls.toObject();
+      clsObj.trainerId = await getPopulatedTrainer(cls);
+      return clsObj;
+    }));
+
     res.status(200).json({ success: true, data: classes });
   } catch (error) {
     next(error);
@@ -60,9 +102,10 @@ export const getClassById = async (req, res, next) => {
     if (!classData) {
       return res.status(404).json({ success: false, message: "Class not found" });
     }
-    // Optional: Check if private, but requirement says "Private for details if required by frontend".
-    // We will leave it public for basic info, frontend usually needs it.
-    res.status(200).json({ success: true, data: classData });
+    const classObj = classData.toObject();
+    classObj.trainerId = await getPopulatedTrainer(classData);
+
+    res.status(200).json({ success: true, data: classObj });
   } catch (error) {
     next(error);
   }

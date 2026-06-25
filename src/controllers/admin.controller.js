@@ -122,9 +122,37 @@ export const demoteTrainer = async (req, res, next) => {
 // GET /api/admin/classes
 export const getClasses = async (req, res, next) => {
   try {
-    const classes = await Class.find()
+    const rawClasses = await Class.find()
       .populate("trainerId", "name image")
       .sort({ createdAt: -1 });
+
+    const classes = await Promise.all(rawClasses.map(async (cls) => {
+      const clsObj = cls.toObject();
+      let trainer = clsObj.trainerId;
+      if (!trainer || typeof trainer === 'string') {
+        let trainerIdStr = typeof trainer === 'string' ? trainer : clsObj.trainerId;
+        let user = null;
+        if (trainerIdStr) {
+          user = await User.findById(trainerIdStr);
+          if (!user && mongoose.Types.ObjectId.isValid(trainerIdStr)) {
+            user = await User.findOne({ _id: new mongoose.Types.ObjectId(trainerIdStr) });
+          }
+        }
+        if (!user && clsObj.trainerName) {
+          user = await User.findOne({ name: clsObj.trainerName });
+        }
+        if (user) {
+          trainer = {
+            _id: user._id.toString(),
+            name: user.name,
+            image: user.image
+          };
+        }
+      }
+      clsObj.trainerId = trainer || { name: clsObj.trainerName };
+      return clsObj;
+    }));
+
     res.status(200).json({ success: true, data: classes });
   } catch (error) {
     next(error);
