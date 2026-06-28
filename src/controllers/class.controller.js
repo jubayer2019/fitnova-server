@@ -166,12 +166,8 @@ export const updateClass = async (req, res, next) => {
       return res.status(403).json({ success: false, message: "Unauthorized to update this class" });
     }
 
-    if (classData.status === "approved") {
-      return res.status(403).json({ success: false, message: "Cannot edit approved classes" });
-    }
-
-    // Prevent trainer from changing status manually
-    delete req.body.status;
+    // Trainer edits push the class back to pending status for admin approval
+    req.body.status = "pending";
 
     const updatedClass = await Class.findByIdAndUpdate(req.params.id, req.body, { new: true });
     res.status(200).json({ success: true, message: "Class updated", data: updatedClass });
@@ -190,6 +186,10 @@ export const deleteClass = async (req, res, next) => {
 
     if (req.user.role !== "admin" && classData.trainerId.toString() !== req.user._id.toString()) {
       return res.status(403).json({ success: false, message: "Unauthorized to delete this class" });
+    }
+
+    if (req.user.role !== "admin" && classData.bookingCount > 0) {
+      return res.status(403).json({ success: false, message: "Cannot delete a class that has already been booked" });
     }
 
     await classData.deleteOne();
