@@ -242,3 +242,13 @@ export const deleteComment = async (req, res, next) => {
     next(error);
   }
 };
+
+// GET /api/forum/posts/comments/my
+export const getMyComments = async (req, res, next) => {
+  try {
+    const comments = await Comment.find({ userId: req.user._id }).sort({ createdAt: -1 });
+    res.status(200).json({ success: true, data: comments });
+  } catch (error) {
+    next(error);
+  }
+};

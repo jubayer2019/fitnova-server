@@ -39,7 +39,7 @@ export const createCheckoutSession = async (req, res, next) => {
             currency: "usd",
             product_data: {
               name: classData.title || classData.className || "Class Booking",
-              images: classData.image ? [classData.image] : [],
+              images: (classData.image && classData.image.startsWith("http") && classData.image.length <= 2000) ? [classData.image] : [],
             },
             unit_amount: Math.round(classData.price * 100),
           },

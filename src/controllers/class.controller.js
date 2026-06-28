@@ -9,9 +9,11 @@ const getPopulatedTrainer = async (cls) => {
     let trainerIdStr = typeof trainer === 'string' ? trainer : cls.trainerId;
     let user = null;
     if (trainerIdStr) {
-      user = await User.findById(trainerIdStr);
-      if (!user && mongoose.Types.ObjectId.isValid(trainerIdStr)) {
-        user = await User.findOne({ _id: new mongoose.Types.ObjectId(trainerIdStr) });
+      if (mongoose.Types.ObjectId.isValid(trainerIdStr)) {
+        user = await User.findById(trainerIdStr);
+      } else {
+        // Find by name if it's not a valid objectId but might be a name
+        user = await User.findOne({ name: trainerIdStr });
       }
     }
     if (!user && cls.trainerName) {
@@ -98,6 +100,9 @@ export const getFeaturedClasses = async (req, res, next) => {
 // GET /api/classes/:id
 export const getClassById = async (req, res, next) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(404).json({ success: false, message: "Class not found" });
+    }
     const classData = await Class.findById(req.params.id).populate("trainerId", "name image specialty bio");
     if (!classData) {
       return res.status(404).json({ success: false, message: "Class not found" });

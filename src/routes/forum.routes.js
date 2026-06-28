@@ -1,7 +1,7 @@
 import express from "express";
 import { 
   getPosts, getLatestPosts, getPostById, createPost, updatePost, deletePost, 
-  toggleLike, toggleDislike, getComments, addComment, editComment, deleteComment 
+  toggleLike, toggleDislike, getComments, addComment, editComment, deleteComment, getMyComments 
 } from "../controllers/forum.controller.js";
 import { verifyUser, verifyTrainerOrAdmin, checkBlockedStatus } from "../middlewares/auth.middleware.js";
 
@@ -20,6 +20,7 @@ router.post("/posts/:id/like", verifyUser, checkBlockedStatus, toggleLike);
 router.post("/posts/:id/dislike", verifyUser, checkBlockedStatus, toggleDislike);
 
 // Comments
+router.get("/posts/comments/my", verifyUser, getMyComments);
 router.get("/posts/:postId/comments", verifyUser, getComments);
 router.post("/posts/:postId/comments", verifyUser, checkBlockedStatus, addComment);
 router.patch("/comments/:commentId", verifyUser, checkBlockedStatus, editComment);
