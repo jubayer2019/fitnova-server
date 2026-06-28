@@ -55,8 +55,25 @@ export const getMyPosts = async (req, res, next) => {
 export const getTrainerBookings = async (req, res, next) => {
   try {
     const bookings = await Booking.find({ trainerId: req.user._id })
-      .populate("userId", "name email image")
-      .populate("classId", "className image price");
+      .populate("classId", "className image price")
+      .lean();
+
+    // Manually fetch and stitch users to ensure profile pictures are attached
+    const { User } = await import("../models/User.js");
+    const userIds = bookings.map(b => b.userId);
+    const users = await User.find({ _id: { $in: userIds } }).select("name email image").lean();
+    
+    const userMap = {};
+    users.forEach(u => {
+      userMap[String(u._id)] = u;
+    });
+
+    bookings.forEach(b => {
+      if (userMap[String(b.userId)]) {
+        b.userId = userMap[String(b.userId)];
+      }
+    });
+
     res.status(200).json({ success: true, data: bookings });
   } catch (error) {
     next(error);
