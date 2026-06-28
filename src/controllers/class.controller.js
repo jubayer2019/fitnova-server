@@ -52,7 +52,7 @@ export const getClasses = async (req, res, next) => {
     const skip = (Number(page) - 1) * Number(limit);
 
     let sortObj = { createdAt: -1 };
-    if (sort === "popular") sortObj = { bookingsCount: -1, createdAt: -1 };
+    if (sort === "popular") sortObj = { bookingCount: -1, createdAt: -1 };
     if (sort === "price-asc") sortObj = { price: 1 };
     if (sort === "price-desc") sortObj = { price: -1 };
 
